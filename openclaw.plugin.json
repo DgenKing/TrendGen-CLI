@@ -1,0 +1,29 @@
+{
+  "id": "trend-gen",
+  "name": "TrendGen",
+  "version": "1.0.0",
+  "description": "Business content trend analysis specialist - analyzes trends across Reddit, Google, X, CoinGecko, and News sources with AI-powered content generation",
+  "author": "AutoGen Digital",
+  "icon": "📈",
+  "entry": "src/index.ts",
+  "skills": ["skills/trend-gen"],
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "enabled": { "type": "boolean", "default": true },
+      "defaultPlatforms": {
+        "type": "array",
+        "items": { "type": "string", "enum": ["twitter", "instagram", "facebook", "reddit", "google", "news", "coingecko"] },
+        "default": ["twitter", "reddit", "google"]
+      },
+      "defaultStrategy": {
+        "type": "string",
+        "enum": ["value_first", "authority_building", "direct_sales"],
+        "default": "value_first"
+      }
+    }
+  },
+  "requires": {
+    "tools": ["browser", "write_file", "read_file"]
+  }
+}

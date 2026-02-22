@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Development
+.git/
+.claude/
+test/
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Build
+dist/
+build/
+
+# Docs source
+CLAW-PACK-STANDARD-BUILD-GUIDE.md

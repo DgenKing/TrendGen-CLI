@@ -1,17 +1,25 @@
 {
-  "name": "trendgen-cli",
+  "name": "claw-pack-trends-gen",
   "version": "1.0.0",
+  "description": "Business content trend analysis specialist for OpenClaw",
+  "main": "src/index.ts",
   "type": "module",
+  "keywords": ["openclaw", "claw-pack", "trends", "trend-analysis", "content-generation"],
   "license": "MIT",
-  "scripts": {
-    "cli": "bun run cli.ts",
-    "cli:ts": "tsx cli.ts"
+  "peerDependencies": {
+    "openclaw": ">=2026.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.20.5"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0"
   },
-  "devDependencies": {
-    "tsx": "^4.20.5",
-    "typescript": "5.6.3"
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "test": "bun test",
+    "publish-pack": "pnpm publish --access public"
   }
 }
