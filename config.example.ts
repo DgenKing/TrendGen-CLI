@@ -66,6 +66,20 @@ export const config = {
     logToFile: true,
   },
 
+  // === IMAGE GENERATION ===
+  // After content is generated, there's a 50/50 chance an image is created.
+  // The image prompt is auto-generated from the post text, then sent to Runware.ai.
+  // Output goes to /current_post/ (overwritten each run).
+  image: {
+    enabled: true,
+    runwareApiKey: "",                // Add your Runware.ai API key here
+    model: "runware:100@1",           // Fast general-purpose model
+    width: 1024,
+    height: 1024,                     // Square — optimised for X.com
+    outputFormat: "WEBP" as const,
+    imageChance: 0.5,                 // 0.5 = 50% chance of generating an image
+  },
+
   // === SCHEDULE ===
   // OpenClaw calls this CLI on a fixed interval (e.g. every 1 hour).
   // The random delay is handled HERE in code — OpenClaw does NOT need to generate any numbers.

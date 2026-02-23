@@ -19,6 +19,7 @@
   },
   "scripts": {
     "dev": "bun run src/index.ts",
+    "cli": "bun --use-system-ca cli.ts",
     "test": "bun test",
     "publish-pack": "pnpm publish --access public"
   }

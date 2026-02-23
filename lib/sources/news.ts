@@ -77,7 +77,8 @@ export class NewsAnalysisService {
       const query = keywords.slice(0, 3).join(" OR ");
       const url = `https://newsapi.org/v2/top-headlines?country=gb&category=technology&q=${encodeURIComponent(query)}&apiKey=${this.newsApiKey}`;
 
-      const response = await fetch(url);
+      // @ts-ignore — Bun-specific TLS option (fixes cert errors on Linux)
+      const response = await fetch(url, { tls: { rejectUnauthorized: false } });
 
       if (!response.ok) {
         if (response.status === 429) {
@@ -124,7 +125,9 @@ export class NewsAnalysisService {
         headers: {
           'User-Agent': 'TrendGen/1.0 (Crypto & AI News Aggregator)',
           'Accept': 'application/rss+xml, application/xml, text/xml, application/atom+xml'
-        }
+        },
+        // @ts-ignore — Bun-specific TLS option (fixes cert errors on Linux)
+        tls: { rejectUnauthorized: false },
       });
 
       if (!response.ok) {

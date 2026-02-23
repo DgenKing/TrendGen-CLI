@@ -1,8 +1,11 @@
+import { rm, mkdir } from "fs/promises";
+import { join } from "path";
 import { config } from "../config";
 import { generateKeywords } from "./keywords";
 import { analyzeTrends, generatePostIdeas, PostIdea, TrendData } from "./trends";
 import { generatePlatformContent, GeneratedContent } from "./content";
 import { Logger } from "./logger";
+import { saveCurrentPost, CurrentPost } from "./image";
 
 export interface PipelineResult {
   status: "success" | "error";
@@ -16,6 +19,7 @@ export interface PipelineResult {
   trends: TrendData;
   postIdeas: PostIdea[];
   content: GeneratedContent[];
+  currentPost: CurrentPost | null;
   meta: {
     timestamp: string;
     processingTimeMs: number;
@@ -37,6 +41,10 @@ export async function runPipeline(
   } = {}
 ): Promise<PipelineResult> {
   const startTime = Date.now();
+  const currentPostDir = join(process.cwd(), "current_post");
+  await rm(currentPostDir, { recursive: true, force: true });
+  await mkdir(currentPostDir, { recursive: true });
+
   const logger = new Logger(config.business.name, options.quiet);
 
   // Merge config with CLI args, mapping to the property names expected by consumer functions
@@ -124,13 +132,22 @@ export async function runPipeline(
       logger.progress("[4/4] Generating content...");
       const contentStart = Date.now();
 
-      // Limit ideas to maxContentPerIdea
       const ideasToGenerate = postIdeas.slice(0, config.output.maxContentPerIdea);
-
       content = await generatePlatformContent(businessData, ideasToGenerate, platforms);
 
       const contentTime = ((Date.now() - contentStart) / 1000).toFixed(1);
       logger.progress(`  done (${content.length} pieces, ${contentTime}s)`);
+    }
+
+    // Step 5: Save current post + optional image (50/50 roll)
+    let currentPost: CurrentPost | null = null;
+    if (content.length > 0) {
+      logger.progress("[5/5] Saving current post (image roll)...");
+      // Prefer twitter post for X.com image sizing; fall back to first available
+      const twitterPost = content.find(c => c.platform === "twitter") || content[0];
+      currentPost = await saveCurrentPost(twitterPost.platform, twitterPost.text, twitterPost.idea);
+      const imageStatus = currentPost.imagePath ? `image saved` : `no image this run`;
+      logger.progress(`  done (${imageStatus})`);
     }
 
     const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -153,6 +170,7 @@ export async function runPipeline(
       trends: trendsData,
       postIdeas: postIdeas.slice(0, config.output.maxPostIdeas),
       content,
+      currentPost,
       meta: {
         timestamp: new Date().toISOString(),
         processingTimeMs: Date.now() - startTime,
@@ -178,6 +196,7 @@ export async function runPipeline(
       trends: { google: [], xcom: [], coingecko: [], reddit: [], news: [] },
       postIdeas: [],
       content: [],
+      currentPost: null,
       meta: {
         timestamp: new Date().toISOString(),
         processingTimeMs: Date.now() - startTime,

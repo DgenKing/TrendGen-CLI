@@ -1,7 +1,9 @@
-#!/usr/bin/env bun
+#!/usr/bin/env -S bun --use-system-ca
+
 
 import { runPipeline } from "./lib/pipeline";
 import { config } from "./config";
+import { ScheduleLogger } from "./lib/schedule-logger";
 
 interface CliArgs {
   platforms?: string[];
@@ -75,13 +77,19 @@ Examples:
 }
 
 async function main() {
+  // Log that CLI was triggered
+  await ScheduleLogger.logTriggered(config.schedule.enabled, config.schedule.intervalHours);
+
   // Random delay scheduling — generated here in code, not by OpenClaw
   if (config.schedule.enabled && config.schedule.randomDelayMinutes) {
     const maxDelay = config.schedule.intervalHours * 60 - 1;
     const delayMins = Math.floor(Math.random() * maxDelay) + 1;
     console.error(`[SCHEDULE] Waiting ${delayMins} minute(s) before running...`);
+    await ScheduleLogger.logDelay(delayMins, config.schedule.intervalHours);
     await new Promise(resolve => setTimeout(resolve, delayMins * 60 * 1000));
   }
+
+  await ScheduleLogger.logRunStart();
 
   const args = parseArgs((typeof Bun !== 'undefined' ? Bun.argv : process.argv).slice(2));
   const result = await runPipeline({
@@ -92,17 +100,27 @@ async function main() {
     quiet: args.quiet,
   });
 
+  // Log schedule outcome
+  await ScheduleLogger.logRunResult({
+    status: result.status,
+    durationMs: result.meta.processingTimeMs,
+    contentPieces: result.meta.contentPieces,
+    ideasGenerated: result.meta.ideasGenerated,
+    sourcesUsed: result.meta.sourcesUsed,
+    imagePath: result.currentPost?.imagePath ?? null,
+    error: result.error,
+  });
+
   // Output JSON to stdout
   console.log(JSON.stringify(result, null, 2));
 
   // Exit with appropriate code
   if (result.status === "error") {
-    process.exit(4); // AI content generation failed
+    process.exit(4);
   }
 
-  // Check if all data sources failed
   if (result.meta.sourcesUsed.length === 0 && result.keywords.length > 0) {
-    process.exit(3); // All data sources failed
+    process.exit(3);
   }
 
   process.exit(0);

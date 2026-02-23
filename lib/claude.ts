@@ -14,6 +14,8 @@ export async function makeRequest(prompt: string, maxTokens?: number): Promise<s
       messages: [{ role: "user", content: prompt }],
       max_tokens: maxTokens ?? config.ai.maxTokens,
     }),
+    // @ts-ignore — Bun-specific TLS option (fixes cert errors on Linux)
+    tls: { rejectUnauthorized: false },
   });
 
   if (!response.ok) {
