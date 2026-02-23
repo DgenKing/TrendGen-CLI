@@ -59,6 +59,8 @@ export async function runPipeline(
     postType: options.strategy || config.business.postType,
   };
 
+  logger.logInput(businessData);
+
   const platforms = options.platforms || [...config.output.platforms];
   const sourcesUsed: string[] = [];
 
@@ -78,12 +80,14 @@ export async function runPipeline(
       // CLI override takes priority
       keywords = options.keywords;
       logger.progress(`  Using CLI keywords: ${keywords.join(", ")}`);
+      logger.logKeywordGeneration(keywords, "CLI override");
     } else if (config.output.keywords.filter(k => k.trim()).length > 0) {
       // Randomly pick from config pool (skip empty entries)
       const pool = config.output.keywords.filter(k => k.trim());
       const count = Math.min(config.output.keywordsPerRun, pool.length);
       keywords = [...pool].sort(() => Math.random() - 0.5).slice(0, count);
       logger.progress(`  Pool pick: ${keywords.join(", ")}`);
+      logger.logKeywordGeneration(keywords, "Pool pick from config");
     } else {
       // AI-generated keywords
       keywords = await generateKeywords(businessData, logger);
@@ -148,12 +152,18 @@ export async function runPipeline(
       currentPost = await saveCurrentPost(twitterPost.platform, twitterPost.text, twitterPost.idea);
       const imageStatus = currentPost.imagePath ? `image saved` : `no image this run`;
       logger.progress(`  done (${imageStatus})`);
+      logger.log("IMAGE_GENERATION", {
+        generated: !!currentPost.imagePath,
+        imagePath: currentPost.imagePath,
+        platform: currentPost.platform,
+      });
     }
 
     const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
     logger.progress(`Total: ${totalTime}s`);
 
     // Save log to file if enabled
+    logger.logCacheInfo(false, (Date.now() - startTime) / 1000);
     if (config.output.logToFile) {
       await logger.saveToFile();
     }
