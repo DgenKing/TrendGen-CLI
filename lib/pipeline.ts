@@ -108,11 +108,12 @@ export async function runPipeline(
     ].join(", ");
     logger.progress(`  done (${trendCounts}, ${trendsTime}s)`);
 
-    // Step 3: Generate post ideas
+    // Step 3: Generate post ideas (pass recent posts so AI avoids repeating topics)
     logger.progress("[3/4] Generating post ideas...");
     const ideasStart = Date.now();
 
-    const postIdeas = await generatePostIdeas(businessData, trendsData, logger);
+    const recentPosts = await Logger.getRecentPostSnippets(10);
+    const postIdeas = await generatePostIdeas(businessData, trendsData, logger, recentPosts);
     const ideasTime = ((Date.now() - ideasStart) / 1000).toFixed(1);
     logger.progress(`  done (${postIdeas.length} ideas, ${ideasTime}s)`);
 

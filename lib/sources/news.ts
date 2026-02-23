@@ -14,14 +14,17 @@ export class NewsAnalysisService {
 
   // 50/50 Crypto + AI/Tech RSS feeds (no API key needed)
   private rssFeeds = [
-    // Crypto feeds
+    // --- CRYPTO (4 feeds) ---
     "https://cointelegraph.com/rss",
     "https://www.coindesk.com/arc/outboundfeeds/rss/",
     "https://cryptonews.com/feed/",
-    // AI & emerging tech feeds
+    "https://decrypt.co/feed",
+
+    // --- AI / TECH (4 feeds) — covers OpenAI, Anthropic, Claude, GPT, Gemini etc ---
     "https://techcrunch.com/category/artificial-intelligence/feed/",
     "https://venturebeat.com/category/ai/feed/",
-    "https://www.artificialintelligence-news.com/feed/",
+    "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
+    "https://feeds.arstechnica.com/arstechnica/technology-lab",
   ];
 
   constructor() {

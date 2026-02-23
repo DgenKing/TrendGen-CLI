@@ -41,10 +41,11 @@ export class Logger {
   async saveToFile(): Promise<string> {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
     const filename = `process_log_${this.businessName}_${timestamp}.txt`;
-    const filepath = path.join(process.cwd(), 'logs', filename);
+    const logDir = path.join(process.cwd(), 'logs', 'process_logs');
+    const filepath = path.join(logDir, filename);
 
-    // Ensure logs directory exists
-    await fs.mkdir(path.join(process.cwd(), 'logs'), { recursive: true });
+    // Ensure process_logs directory exists
+    await fs.mkdir(logDir, { recursive: true });
 
     let content = '';
     content += '='.repeat(80) + '\n';
@@ -161,5 +162,57 @@ export class Logger {
       error_message: error.message || error,
       error_type: error.name || 'Unknown'
     }, `Error occurred during ${step}`);
+  }
+
+  // === POST LOG HELPERS ===
+
+  static snippetFromPost(text: string, wordCount: number = 6): string {
+    return text
+      .replace(/\n/g, ' ')
+      .split(/\s+/)
+      .slice(0, wordCount)
+      .join(' ')
+      .replace(/[^a-zA-Z0-9 ]/g, '')
+      .trim();
+  }
+
+  static async logPost(businessName: string, platform: string, postText: string): Promise<void> {
+    const postLogDir = path.join(process.cwd(), 'logs', 'post_logs');
+    await fs.mkdir(postLogDir, { recursive: true });
+
+    const snippet = Logger.snippetFromPost(postText);
+    const safeName = businessName.replace(/[^a-zA-Z0-9]/g, '_');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const filename = `${snippet.replace(/\s+/g, '_')}_${safeName}_${platform}_${timestamp}.txt`;
+    const filepath = path.join(postLogDir, filename);
+
+    const content =
+      `SNIPPET: ${snippet}\n` +
+      `BUSINESS: ${businessName}\n` +
+      `PLATFORM: ${platform}\n` +
+      `GENERATED: ${new Date().toISOString()}\n` +
+      `${'='.repeat(60)}\n` +
+      postText;
+
+    await fs.writeFile(filepath, content, 'utf-8');
+  }
+
+  static async getRecentPostSnippets(limit: number = 50): Promise<string[]> {
+    const postLogDir = path.join(process.cwd(), 'logs', 'post_logs');
+    try {
+      const files = await fs.readdir(postLogDir);
+      const posts: string[] = [];
+      for (const file of files.slice(-limit)) {
+        const raw = await fs.readFile(path.join(postLogDir, file), 'utf-8');
+        // Extract full post text (everything after the separator line)
+        const separatorIndex = raw.indexOf('='.repeat(60));
+        if (separatorIndex !== -1) {
+          posts.push(raw.slice(separatorIndex + 60).trim());
+        }
+      }
+      return posts;
+    } catch {
+      return [];
+    }
   }
 }

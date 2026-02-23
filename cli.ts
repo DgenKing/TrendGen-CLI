@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
 import { runPipeline } from "./lib/pipeline";
+import { config } from "./config";
 
 interface CliArgs {
   platforms?: string[];
@@ -74,6 +75,14 @@ Examples:
 }
 
 async function main() {
+  // Random delay scheduling — generated here in code, not by OpenClaw
+  if (config.schedule.enabled && config.schedule.randomDelayMinutes) {
+    const maxDelay = config.schedule.intervalHours * 60 - 1;
+    const delayMins = Math.floor(Math.random() * maxDelay) + 1;
+    console.error(`[SCHEDULE] Waiting ${delayMins} minute(s) before running...`);
+    await new Promise(resolve => setTimeout(resolve, delayMins * 60 * 1000));
+  }
+
   const args = parseArgs((typeof Bun !== 'undefined' ? Bun.argv : process.argv).slice(2));
   const result = await runPipeline({
     platforms: args.platforms,

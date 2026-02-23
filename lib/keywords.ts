@@ -28,30 +28,28 @@ function buildKeywordPrompt(input: KeywordInput): string {
     ? `- Business Personality & Values: ${input.businessPersonality}\n`
     : '';
 
-  return `Generate relevant keywords for a UK business social media content analysis.
+  return `Generate relevant keywords for a crypto influencer & AI tech commentator's social media trend analysis.
 
-Business Details:
-- Name: ${input.businessName}
+Influencer Profile:
+- Handle: ${input.businessName}
 - Type: ${input.businessType}
-- Location: ${input.ukCity}
 - Industry: ${input.industry}
-- Target Audience: ${input.targetAudience}
-- Services: ${input.servicesOffered}
+- Audience: ${input.targetAudience}
+- Content: ${input.servicesOffered}
 ${personalityContext}
-Generate 8-12 relevant keywords that would be useful for:
-1. Google Trends analysis in the UK
-2. Social media trend discovery
-3. Local search patterns
-4. Industry-specific terminology
-5. Target audience language preferences
-${input.businessPersonality ? '6. Keywords that align with business personality and values\n' : ''}
+Generate 8-12 high-signal keywords that would be useful for:
+1. Google Trends analysis (global crypto & AI searches)
+2. Crypto news discovery (price moves, protocol updates, token launches)
+3. AI/tech news discovery (model releases, agent frameworks, company news)
+4. Community trending topics (CT, Reddit, Discord)
+5. Audience search patterns
+${input.businessPersonality ? '6. Keywords that align with the influencer personality and content style\n' : ''}
 Focus on:
-- Local search terms (include city name where relevant)
-- Industry-specific phrases
-- Target audience interests
-- Seasonal/trending terms for the business type
-- UK spelling variants and colloquialisms
-${input.businessPersonality ? '- Keywords that reflect the business personality and unique positioning' : ''}
+- Specific token tickers and protocol names (BTC, ETH, SOL, etc.)
+- AI model and company names (Claude, GPT, Gemini, DeepSeek, etc.)
+- Trending narratives (RWA, DeFi, agentic AI, etc.)
+- High-signal search terms the crypto/AI community uses
+${input.businessPersonality ? '- Keywords that reflect the influencer voice and niche' : ''}
 
 Return ONLY a comma-separated list of keywords, no explanations:`;
 }

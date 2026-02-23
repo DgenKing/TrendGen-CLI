@@ -80,9 +80,10 @@ export async function generatePostIdeas(
     postType?: string;
   },
   trendsData: TrendData,
-  logger?: any
+  logger?: any,
+  recentPosts: string[] = []
 ): Promise<PostIdea[]> {
-  const prompt = buildPostIdeaPrompt(businessData, trendsData);
+  const prompt = buildPostIdeaPrompt(businessData, trendsData, recentPosts);
   const content = await makeRequest(prompt, 1500);
   const postIdeas = parsePostIdeasFromResponse(content, trendsData);
 
@@ -93,51 +94,53 @@ export async function generatePostIdeas(
   return postIdeas;
 }
 
-function buildPostIdeaPrompt(businessData: any, trendsData: TrendData): string {
+function buildPostIdeaPrompt(businessData: any, trendsData: TrendData, recentPosts: string[] = []): string {
   const personalityContext = businessData.businessPersonality
     ? `- Business Personality & Values: ${businessData.businessPersonality}\n`
     : '';
 
   const postTypeGuidelines = getPostTypeGuidelines(businessData.postType || 'value_first');
 
-  return `Analyze these carefully filtered trending topics and generate social media post ideas for a UK business. Focus on GENUINE connections that provide real business value.
+  const recentPostsWarning = recentPosts.length > 0
+    ? `\nRECENTLY COVERED — do NOT generate ideas about these topics (already posted):\n${recentPosts.map((p, i) => `[${i + 1}] ${p}`).join('\n')}\nChoose DIFFERENT topics and angles.\n`
+    : '';
 
-Business Details:
-- Name: ${businessData.businessName}
+  return `Analyze these trending crypto and AI/tech topics and generate post ideas for a crypto influencer & AI tech commentator. React to the news — be direct, punchy, and relevant to the community.${recentPostsWarning}
+
+Influencer Profile:
+- Handle: ${businessData.businessName}
 - Type: ${businessData.businessType}
-- Location: ${businessData.ukCity}
 - Industry: ${businessData.industry}
-- Target Audience: ${businessData.targetAudience}
-- Services: ${businessData.servicesOffered}
+- Audience: ${businessData.targetAudience}
+- Content: ${businessData.servicesOffered}
 ${personalityContext}
 Content Strategy: ${postTypeGuidelines.strategy}
 
-High-Relevance Trends:
+Latest Trends & News:
 ${formatTrendsWithContext(trendsData)}
 
-IMPORTANT QUALITY GUIDELINES:
-- REJECT forced connections - trends must naturally relate to the business
-- PRIORITIZE evergreen topics over fleeting viral content
-- FOCUS on trends that solve customer problems or demonstrate expertise
-- Each trend connection must provide clear business benefit or audience value
-- Avoid superficial hashtag jumping - connections must feel authentic
+QUALITY GUIDELINES:
+- PRIORITIZE breaking news and timely takes — recency is alpha, evergreen is secondary
+- Each idea must feel like something the crypto/AI community is actively talking about RIGHT NOW
+- Hot takes, market reactions, alpha calls, and AI model drops score highest
+- Be specific and opinionated — generic "here's what you need to know" is not enough
+- Aim for roughly 50% crypto ideas, 50% AI/tech ideas across the set
 
 Generate 6-8 post concepts that:
-1. Connect trends AUTHENTICALLY to this business (no forced connections)
-2. Provide genuine value or solve real problems for the target audience
+1. React directly to a specific trend, price move, or news item
+2. Deliver genuine alpha, a spicy take, or real insight for the audience
 3. Are 4-6 words each (brief and punchy)
-4. Focus on UK market and local relevance
+4. Appeal to a global crypto/Web3/AI community
 5. ${postTypeGuidelines.requirements}
-${businessData.businessPersonality ? '6. Align with the business personality, values, and unique positioning' : ''}
-7. Demonstrate clear business benefit from the trend connection
+${businessData.businessPersonality ? '6. Fully embody the influencer personality — no corporate speak, no watered-down takes' : ''}
 
 Tone: ${postTypeGuidelines.tone}
 ${postTypeGuidelines.examples}
 
 For each idea, specify:
-- The exact trend source that inspired it
-- A relevance score (0.1 to 1.0) - ONLY score 0.7+ if connection is genuinely valuable
-- Brief business benefit explanation
+- The exact trend or news source that inspired it
+- A relevance score (0.1 to 1.0) — score 0.7+ for timely, high-signal ideas
+- Brief note on why this resonates with the crypto/AI audience
 
 Format as JSON array:
 [
@@ -145,7 +148,7 @@ Format as JSON array:
     "concept": "Brief post concept",
     "trend_source": "Source: specific trend that inspired this",
     "relevance_score": 0.8,
-    "business_benefit": "Clear benefit this provides to business/audience"
+    "business_benefit": "Why this resonates with the crypto/AI audience"
   }
 ]
 
@@ -181,43 +184,44 @@ function getFallbackPostIdeas(trendsData: TrendData): PostIdea[] {
   const fallbackIdeas = [
     {
       id: "idea_1",
-      concept: "Local community support",
-      trend_source: "General: Community engagement trends",
+      concept: "BTC dominance shifting again",
+      trend_source: "General: Crypto market trends",
       relevance_score: 0.7
     },
     {
       id: "idea_2",
-      concept: "Customer appreciation post",
-      trend_source: "Social media: Customer loyalty trends",
-      relevance_score: 0.6
-    },
-    {
-      id: "idea_3",
-      concept: "Behind the scenes content",
-      trend_source: "Content: Transparency trends",
-      relevance_score: 0.8
-    },
-    {
-      id: "idea_4",
-      concept: "Local partnerships showcase",
-      trend_source: "Business: Collaboration trends",
+      concept: "New AI model just dropped",
+      trend_source: "General: AI model releases",
       relevance_score: 0.7
     },
     {
-      id: "idea_5",
-      concept: "Seasonal service highlight",
-      trend_source: "Seasonal: Current trends",
+      id: "idea_3",
+      concept: "Altcoin season incoming signals",
+      trend_source: "General: Crypto cycle analysis",
       relevance_score: 0.6
+    },
+    {
+      id: "idea_4",
+      concept: "AI agents changing everything",
+      trend_source: "General: Agentic AI trends",
+      relevance_score: 0.6
+    },
+    {
+      id: "idea_5",
+      concept: "Whale alert worth watching",
+      trend_source: "General: On-chain data",
+      relevance_score: 0.5
     }
   ];
 
-  // Try to connect to actual trends if available
-  if (trendsData.reddit.length > 0) {
-    fallbackIdeas[0].trend_source = `Reddit: ${trendsData.reddit[0].title?.substring(0, 50)}...`;
+  // Upgrade fallback sources with real data if available
+  if (trendsData.news.length > 0) {
+    fallbackIdeas[0].trend_source = `News: ${trendsData.news[0].headline?.substring(0, 60)}...`;
   }
 
-  if (trendsData.news.length > 0) {
-    fallbackIdeas[1].trend_source = `BBC: ${trendsData.news[0].headline?.substring(0, 50)}...`;
+  if (trendsData.coingecko.length > 0) {
+    const top = trendsData.coingecko[0];
+    fallbackIdeas[2].trend_source = `CoinGecko: ${top.name} (${top.symbol}) trending`;
   }
 
   return fallbackIdeas;
@@ -231,22 +235,22 @@ function getPostTypeGuidelines(postType: string): {
 } {
   const guidelines = {
     value_first: {
-      strategy: "Value-First (Engagement) - Build trust and provide genuine value without selling",
-      requirements: "Focus on helping, educating, or entertaining the audience without any promotional content",
-      tone: "Helpful, educational, approachable - no selling language",
-      examples: "Example concepts: 'Five-minute home fixes', 'Local weather prep tips', 'Yorkshire community news'"
+      strategy: "Value-First (Engagement) - Drop alpha, educate, and entertain without shilling",
+      requirements: "Deliver genuine insight, market analysis, or news reaction — no self-promotion",
+      tone: "High-energy, punchy, no-BS — like texting alpha to your group chat",
+      examples: "Example concepts: 'Why BTC just flipped key level', 'Claude 4 just wrecked GPT', 'Altseason checklist right now'"
     },
     authority_building: {
-      strategy: "Authority Building (Promotional) - Showcase expertise while subtly highlighting services",
-      requirements: "Demonstrate competence and unique approach while gently positioning services as solutions",
-      tone: "Confident, expert, credible - subtle promotion through demonstrated expertise",
-      examples: "Example concepts: 'Why professionals choose...', 'Behind our process', 'Client success stories'"
+      strategy: "Authority Building - Position as the go-to source for crypto & AI alpha",
+      requirements: "Share expert analysis or insider takes that show you called it before the crowd",
+      tone: "Confident, analytical, credible — you saw this coming",
+      examples: "Example concepts: 'Called this ETH move weeks ago', 'Here is why AI agents win 2026', 'This chart pattern never lies'"
     },
     direct_sales: {
-      strategy: "Direct Sales (Advertising) - Clear calls-to-action to drive immediate business results",
-      requirements: "Include clear calls-to-action and conversion-focused language that drives immediate action",
-      tone: "Direct, compelling, action-oriented - clear value proposition and next steps",
-      examples: "Example concepts: 'Book your appointment', 'Limited time offer', 'Call now for...'"
+      strategy: "Direct Engagement - Drive follows, shares, and community interaction",
+      requirements: "Create urgency and FOMO that makes the audience act — comment, share, follow for more alpha",
+      tone: "Hype-driven, direct, action-oriented — make them feel they are missing out if they scroll past",
+      examples: "Example concepts: 'Follow for daily alpha', 'Drop your BTC target below', 'RT if you are long ETH'"
     }
   };
 
