@@ -27,3 +27,6 @@ Thumbs.db
 # === PROJECT SPECIFIC ===
 # Keep config.example.ts but ignore config.ts (contains secrets)
 config.ts
+
+# Runtime output (overwritten each run)
+current_post/
