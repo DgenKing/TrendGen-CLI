@@ -16,15 +16,19 @@ export interface CurrentPost {
 
 // Generates a Runware-optimised image prompt from the post text
 async function buildImagePrompt(postText: string): Promise<string> {
-  const prompt = `You are an AI image prompt engineer. Convert this crypto/AI social media post into a concise image generation prompt for a square graphic suited to X.com.
+  // Get style settings from config
+  const stylePrompt = config.image?.stylePrompt || "Clean, professional design with blue/white tones. Modern tech aesthetic.";
+  const brandContext = config.image?.brandContext || "AI automation agency helping small business";
+
+  const prompt = `You are an AI image prompt engineer. Convert this social media post into a concise image generation prompt for a square graphic suited to X.com.
 
 Post:
 ${postText}
 
 Rules:
 - Describe a compelling visual scene or graphic — NOT text/typography
-- Style: sleek dark digital art, neon accents, futuristic tech aesthetic
-- Suitable for crypto/AI influencer branding
+- Style: ${stylePrompt}
+- Brand context: ${brandContext}
 - Max 60 words
 - No quotes, no explanation — just the image prompt
 

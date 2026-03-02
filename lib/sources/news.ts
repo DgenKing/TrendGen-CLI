@@ -12,23 +12,13 @@ interface NewsArticle {
 export class NewsAnalysisService {
   private newsApiKey: string;
 
-  // 50/50 Crypto + AI/Tech RSS feeds (no API key needed)
-  private rssFeeds = [
-    // --- CRYPTO (4 feeds) ---
-    "https://cointelegraph.com/rss",
-    "https://www.coindesk.com/arc/outboundfeeds/rss/",
-    "https://cryptonews.com/feed/",
-    "https://decrypt.co/feed",
-
-    // --- AI / TECH (4 feeds) — covers OpenAI, Anthropic, Claude, GPT, Gemini etc ---
-    "https://techcrunch.com/category/artificial-intelligence/feed/",
-    "https://venturebeat.com/category/ai/feed/",
-    "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
-    "https://feeds.arstechnica.com/arstechnica/technology-lab",
-  ];
-
   constructor() {
     this.newsApiKey = config.sources.news.newsApiKey || "";
+  }
+
+  // Get RSS feeds from config
+  private get rssFeeds(): string[] {
+    return config.sources.news.rssFeeds || [];
   }
 
   async getRelevantArticles(keywords: string[], businessType: string, ukCity: string): Promise<NewsArticle[]> {
@@ -180,9 +170,9 @@ export class NewsAnalysisService {
   }
 
   private rankArticlesByRelevance(articles: NewsArticle[], keywords: string[], businessType: string): NewsArticle[] {
-    // Crypto/AI relevant terms for scoring
-    const cryptoTerms = ["bitcoin", "btc", "ethereum", "eth", "crypto", "token", "blockchain", "defi", "nft", "web3", "exchange", "trading", "altcoin", "solana", "dogecoin", "memecoin", "coin", "price", "market", "bull", "bear", "pump", "dump"];
-    const aiTerms = ["ai", "artificial intelligence", "machine learning", "ml", "deep learning", "neural", "chatgpt", "openai", "anthropic", "claude", "gemini", "gpt", "llm", "agent", "model", "transformer", "nvidia", "gpu", "copilot", "midjourney", "stable diffusion", "sam altman", "startup", "robot", "autonomous"];
+    // Get scoring terms from config
+    const industryTerms = config.sources.news.scoringTerms?.industry || [];
+    const techTerms = config.sources.news.scoringTerms?.tech || [];
 
     return articles.map(article => {
       let score = 0;
@@ -195,16 +185,16 @@ export class NewsAnalysisService {
         }
       });
 
-      // Check for crypto terms
-      cryptoTerms.forEach(term => {
-        if (content.includes(term)) {
+      // Check for industry terms (from config)
+      industryTerms.forEach(term => {
+        if (content.includes(term.toLowerCase())) {
           score += 0.3;
         }
       });
 
-      // Check for AI terms
-      aiTerms.forEach(term => {
-        if (content.includes(term)) {
+      // Check for tech terms (from config)
+      techTerms.forEach(term => {
+        if (content.includes(term.toLowerCase())) {
           score += 0.3;
         }
       });

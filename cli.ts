@@ -89,6 +89,19 @@ async function main() {
     await new Promise(resolve => setTimeout(resolve, delayMins * 60 * 1000));
   }
 
+  // Jitter — adds organic randomness even when OpenClaw triggers directly
+  if (config.schedule.jitterMinutes && config.schedule.jitterMinutes > 0) {
+    const jitterSecs = (Math.floor(Math.random() * config.schedule.jitterMinutes) + 1) * 60;
+    console.error(`[JITTER] Waiting ${jitterSecs}s (${Math.floor(jitterSecs/60)}m) before running...`);
+
+    // Countdown every 10 seconds
+    for (let remaining = jitterSecs; remaining > 0; remaining -= 10) {
+      await new Promise(resolve => setTimeout(resolve, 10000));
+      console.error(`[JITTER] ${remaining}s remaining...`);
+    }
+    console.error(`[JITTER] Go! Running pipeline.`);
+  }
+
   await ScheduleLogger.logRunStart();
 
   const args = parseArgs((typeof Bun !== 'undefined' ? Bun.argv : process.argv).slice(2));

@@ -1,5 +1,5 @@
 import { makeRequest } from "./claude";
-import { Business } from "../config";
+import { Business, config } from "../config";
 
 interface KeywordInput {
   businessName: string;
@@ -28,28 +28,32 @@ function buildKeywordPrompt(input: KeywordInput): string {
     ? `- Business Personality & Values: ${input.businessPersonality}\n`
     : '';
 
-  return `Generate relevant keywords for a crypto influencer & AI tech commentator's social media trend analysis.
+  // Get prompt config or use defaults
+  const keywordFocus = config.prompts?.keywordFocus?.join('\n') || "Industry trends, AI tools, audience pain points";
+  const keywordExamples = config.prompts?.keywordExamples?.join('\n') || "Industry terms, AI tool names, pain points";
 
-Influencer Profile:
+  return `Generate relevant keywords for ${input.businessName} (${input.businessType}) social media content.
+
+Business Profile:
 - Handle: ${input.businessName}
 - Type: ${input.businessType}
 - Industry: ${input.industry}
 - Audience: ${input.targetAudience}
-- Content: ${input.servicesOffered}
+- Services: ${input.servicesOffered}
 ${personalityContext}
 Generate 8-12 high-signal keywords that would be useful for:
-1. Google Trends analysis (global crypto & AI searches)
-2. Crypto news discovery (price moves, protocol updates, token launches)
-3. AI/tech news discovery (model releases, agent frameworks, company news)
-4. Community trending topics (CT, Reddit, Discord)
-5. Audience search patterns
-${input.businessPersonality ? '6. Keywords that align with the influencer personality and content style\n' : ''}
+1. Google Trends analysis (searches your target audience makes)
+2. News discovery relevant to the industry
+3. AI/tech news discovery (tools and trends)
+4. Community trending topics
+5. Audience search patterns and pain points
+${input.businessPersonality ? '6. Keywords that align with the business personality and content style\n' : ''}
+
 Focus on:
-- Specific token tickers and protocol names (BTC, ETH, SOL, etc.)
-- AI model and company names (Claude, GPT, Gemini, DeepSeek, etc.)
-- Trending narratives (RWA, DeFi, agentic AI, etc.)
-- High-signal search terms the crypto/AI community uses
-${input.businessPersonality ? '- Keywords that reflect the influencer voice and niche' : ''}
+${keywordFocus}
+
+Example keyword types:
+${keywordExamples}
 
 Return ONLY a comma-separated list of keywords, no explanations:`;
 }

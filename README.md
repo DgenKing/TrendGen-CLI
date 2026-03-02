@@ -1,137 +1,148 @@
 # TrendGen-CLI
 
-**Crypto & AI Influencer Content Generator**
+TrendGen-CLI is an autonomous content generation and social media automation tool designed to keep your brand active on X.com (Twitter). It discovers trends, generates niche-specific content using AI, creates matching images, and handles both auto-posting and strategic auto-commenting.
 
-A TypeScript/Bun CLI tool that generates social media content for crypto/AI influencers. Scrapes trends from multiple sources, uses DeepSeek AI to generate post ideas and content, and can optionally generate images via Runware.ai.
+Originally built for **@AutoGenDigital** (AI automation for Yorkshire trades), it is fully configurable to any brand or niche.
 
-## Features
+---
 
-### Multi-Source Trend Analysis
-- **Google Autocomplete** - UK-focused search suggestions
-- **CoinGecko** - Trending cryptocurrencies
-- **RSS Feeds** - 8 news sources (CoinTelegraph, CoinDesk, Cryptonews, Decrypt, TechCrunch, VentureBeat, The Verge, Ars Technica)
-- **Reddit** - UK subreddit discussions (requires API credentials)
-- **X.com** - UK trending topics (currently disabled)
+## 🚀 Features
 
-### AI Content Generation
-- **Provider**: DeepSeek (deepseek-chat)
-- **5-Step Pipeline**:
-  1. Keyword selection (from 100-keyword pool or AI-generated)
-  2. Trend analysis across all sources
-  3. Post idea generation with relevance scoring
-  4. Platform-specific content (Twitter, Instagram, Facebook)
-  5. Optional image generation
+- **Autonomous Trend Discovery:** Scrapes RSS feeds, Google Trends, and CoinGecko to find what's relevant *now*.
+- **AI Content Generation:** Uses DeepSeek or Claude to write high-engagement posts in your specific brand voice.
+- **Image Generation:** Automatically generates 1024x1024 images via Runware.ai to match your posts.
+- **Smart Auto-Posting:** Posts up to 5 times a day during peak engagement windows.
+- **Strategic Auto-Commenting:** Searches for relevant conversations via `twitterapi.io` and leaves helpful, value-first replies (up to 10/day).
+- **Anti-Spam Protection:** Uses a local SQLite database to track every post and reply, ensuring no duplicates or over-posting.
+- **Dry-Run Mode:** Test your prompts and search queries without actually spending API credits or posting publicly.
 
-### Content Strategies
-- **Value First** - Educational/alpha content, no selling
-- **Authority Building** - Expert positioning
-- **Direct Sales** - CTA-driven engagement
+---
 
-### Image Generation
-- **Provider**: Runware.ai
-- **Chance**: Configurable (default 80%)
-- **Output**: 1024x1024 square WEBP images
+## 🛠 Prerequisites
 
-### CLI Options
+- **[Bun](https://bun.sh/)** (Runtime)
+- **X (Twitter) Developer Account:** Free tier (for posting).
+- **[twitterapi.io](https://twitterapi.io/):** $5/mo plan (required for searching tweets to comment on).
+- **AI API Key:** DeepSeek (recommended) or Anthropic (Claude).
+- **[Runware.ai](https://runware.ai/) API Key:** (Optional, for image generation).
+
+---
+
+## ⚙️ Setup & Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/DgenKing/TrendGen-CLI.git
+   cd TrendGen-CLI
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   bun install
+   ```
+
+3. **Configure the app:**
+   ```bash
+   cp config.example.ts config.ts
+   ```
+   Open `config.ts` and fill in your API keys and brand details (see [Configuration Guide](#configuration-guide) below).
+
+---
+
+## 📖 Configuration Guide
+
+The `config.ts` file is the brain of the application. Everything from brand voice to RSS feeds is managed here.
+
+### 1. Business Profile
+Define *who* is posting. This shapes the AI's writing style.
+- `personality`: e.g., "Straight-talking ex-joiner from Yorkshire. Zero corporate bollocks."
+- `servicesOffered`: What do you actually do?
+
+### 2. Data Sources & Scoring
+Stop posting irrelevant "crypto" news if you are a plumber.
+- `rssFeeds`: Add industry-specific feeds (e.g., local news, trade journals).
+- `scoringTerms`: The AI uses these to rank articles. If an article mentions "Yorkshire" or "Leads", it gets a higher priority.
+
+### 3. X (Twitter) API Setup
+1. Go to [X Developer Portal](https://developer.x.com/en/portal/dashboard).
+2. Create a Project & App.
+3. **Crucial:** Set App Permissions to **"Read and Write"**.
+4. Generate and copy: `Consumer Key`, `Consumer Secret`, `Access Token`, and `Access Token Secret`.
+
+### 4. twitterapi.io (For Commenting)
+X's Free API does not allow searching. We use `twitterapi.io` to find tweets matching your `searchQueries` (e.g., "Yorkshire builders", "WordPress slow").
+
+---
+
+## 🕹 Usage
+
+### The Main Integration (Post + Comment)
+This is what you'll run most of the time. It checks your daily caps, generates content if needed, and searches for tweets to reply to.
+
 ```bash
-bun run cli --platforms twitter
-bun run cli --platforms twitter,instagram
-bun run cli --strategy direct_sales
-bun run cli --keywords "bitcoin,ethereum" --platforms twitter
-bun run cli --skip-content  # Trend analysis only
-bun run cli --quiet         # JSON-only output
-bun run cli --help          # Show help
+# Standard run (Respects config caps)
+bun run x
+
+# Dry run (Log everything, post nothing)
+bun run x -- --dry-run
+
+# Post only (Skip commenting)
+bun run x -- --post-only
+
+# Comment only (Skip posting)
+bun run x -- --comment-only
+
+# Posts today: 2/5 (Resets midnight)
+bun run x -- --status 
+
+
 ```
 
-## Installation
-
+### Content Generation Only
+If you just want to see what the AI generates without any X integration:
 ```bash
-git clone git@github.com:DgenKing/TrendGen-CLI.git
-cd TrendGen-CLI
-bun install
-cp config.example.ts config.ts
-# Edit config.ts — add your DeepSeek + Runware API keys
-```
-
-```bash
-# Run (use this — includes --use-system-ca for Linux TLS)
 bun run cli
-
-# Direct (may fail with cert errors on Linux)
-bun --use-system-ca cli.ts
 ```
 
-## Configuration
+---
 
-Edit `config.ts` to customize:
+## 🕒 Automation (The "Hands-Free" Strategy)
 
-- **AI Provider**: DeepSeek API key
-- **Image Generation**: Runware.ai API key
-- **Keywords**: 100-keyword pool (50 crypto / 50 AI)
-- **Schedule**: Random delay settings
-- **Sources**: Enable/disable individual sources
+To run this 24/7, we recommend triggering the script every 2 hours. The script handles its own internal caps (e.g., it won't post more than 5 times a day even if triggered 12 times).
 
-### API Keys Required
-
-| Service | Purpose | Config Field |
-|---------|---------|--------------|
-| DeepSeek | AI content generation | `config.ai.apiKey` |
-| Runware.ai | Image generation | `config.image.runwareApiKey` |
-
-### Optional APIs
-
-| Service | Purpose | Config Field |
-|---------|---------|--------------|
-| Reddit | UK discussions | `config.sources.reddit.clientId`, `clientSecret` |
-| NewsAPI | UK news | `config.sources.news.newsApiKey` |
-
-## Project Structure
-
+### Using OpenClaw
+If you are using OpenClaw, use this schedule:
 ```
-cli.ts              # Entry point, CLI args, scheduling
-lib/
-  pipeline.ts       # 5-step content generation pipeline
-  claude.ts        # DeepSeek API client
-  trends.ts        # Post idea generation
-  content.ts       # Platform-specific content
-  image.ts         # Runware.ai image generation
-  keywords.ts       # Keyword selection
-  logger.ts        # Process & post logging
-  cache.ts         # In-memory TTL cache
-  schedule-logger.ts
-  sources/
-    google.ts      # Google autocomplete
-    coingecko.ts   # Trending coins
-    news.ts        # RSS feed parser
-    xcom.ts        # UK trends (disabled)
-    reddit.ts      # Reddit search (disabled)
+Every 2 hours: bun run x
 ```
 
-## Output
+### Peak Posting Times (UK Example)
+The script is optimized for these windows:
+- **08:00:** Automation win story
+- **11:00:** Tech made simple (Comparison)
+- **14:00:** Value tip
+- **18:00:** Personal/Build-in-public
+- **21:00:** Soft promo/Result
 
-- **JSON to stdout** - Full pipeline results
-- **Logs to stderr** - Progress and errors
-- **Files**:
-  - `current_post/post.json` - Latest generated post
-  - `current_post/image.webp` - Generated image (if any)
-  - `logs/schedule_logs/schedule.log` - Schedule timing
-  - `logs/post_logs/` - Recent posts for dedup
+---
 
-## Business Profile
+## 🗄 Database & Tracking
 
-Configured for **@DgenKing63330** - Crypto influencer targeting:
-- Crypto degens, futures traders, retail investors
-- AI/Web3 enthusiasts aged 18-45
-- Content: Breaking crypto news, trading tips, AI model news
+The app creates an `x_post_data.db` (SQLite) file. This tracks:
+- **Posts:** What was posted and when (prevents double-posting).
+- **Comments:** Which tweet IDs we've already replied to (prevents spamming the same person).
+- **Daily Counts:** Ensures we stay within X API free tier limits.
 
-## OpenClaw Plugin
+---
 
-This can also be installed as an OpenClaw plugin:
+## ⚠️ Troubleshooting
 
-```bash
-openclaw plugins install claw-pack-trends-gen
-```
+- **X API 503 Error:** Usually means your API tokens don't have "Write" permissions. Re-check your Developer Portal settings and **regenerate your tokens** after changing permissions.
+- **No Images Generating:** Ensure `image.enabled` is `true` and your Runware API key is valid. Note there is a default 50% chance (`imageChance: 0.5`) per post.
+- **Crypto Content in a Non-Crypto Niche:** Check `lib/sources/news.ts` or your `config.ts`. Ensure the hardcoded crypto RSS feeds are replaced with your niche feeds.
 
-## License
+---
+
+## 📜 License
 
 MIT

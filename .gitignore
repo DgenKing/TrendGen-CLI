@@ -30,3 +30,9 @@ config.ts
 
 # Runtime output (overwritten each run)
 current_post/
+
+# X.com integration database
+x_post_data.db
+
+# Test scripts with credentials
+test-oauth2.ts
