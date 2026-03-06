@@ -11,12 +11,14 @@ interface CliArgs {
   keywords?: string[];
   skipContent: boolean;
   quiet: boolean;
+  forceImage: boolean;
 }
 
 function parseArgs(args: string[]): CliArgs {
   const result: CliArgs = {
     skipContent: false,
     quiet: false,
+    forceImage: false,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -37,6 +39,9 @@ function parseArgs(args: string[]): CliArgs {
         break;
       case "--quiet":
         result.quiet = true;
+        break;
+      case "--image":
+        result.forceImage = true;
         break;
       case "--help":
       case "-h":
@@ -64,6 +69,7 @@ Options:
   --platforms <list>    Comma-separated: twitter,instagram,facebook (default: all)
   --strategy <type>      value_first, authority_building, or direct_sales
   --keywords <list>      Comma-separated keywords (skip AI generation)
+  --image                Force image generation (ignores imageChance and enabled)
   --skip-content         Stop after trend analysis, skip content generation
   --quiet                Suppress stderr progress, only JSON on stdout
   --help, -h             Show this help message
@@ -111,6 +117,7 @@ async function main() {
     keywords: args.keywords,
     skipContent: args.skipContent,
     quiet: args.quiet,
+    forceImage: args.forceImage,
   });
 
   // Log schedule outcome

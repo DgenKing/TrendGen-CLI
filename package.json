@@ -21,7 +21,7 @@
   "scripts": {
     "dev": "bun run src/index.ts",
     "cli": "bun --use-system-ca cli.ts",
-    "x": "bun --use-system-ca x-integration.ts",
+    "tg": "bun --use-system-ca x-integration.ts",
     "test": "bun test",
     "publish-pack": "pnpm publish --access public"
   }

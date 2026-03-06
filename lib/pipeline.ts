@@ -38,6 +38,7 @@ export async function runPipeline(
     keywords?: string[];
     skipContent?: boolean;
     quiet?: boolean;
+    forceImage?: boolean;
   } = {}
 ): Promise<PipelineResult> {
   const startTime = Date.now();
@@ -148,7 +149,7 @@ export async function runPipeline(
       logger.progress("[5/5] Saving current post (image roll)...");
       // Prefer twitter post for X.com image sizing; fall back to first available
       const twitterPost = content.find(c => c.platform === "twitter") || content[0];
-      currentPost = await saveCurrentPost(twitterPost.platform, twitterPost.text, twitterPost.idea);
+      currentPost = await saveCurrentPost(twitterPost.platform, twitterPost.text, twitterPost.idea, options.forceImage);
       const imageStatus = currentPost.imagePath ? `image saved` : `no image this run`;
       logger.progress(`  done (${imageStatus})`);
       logger.log("IMAGE_GENERATION", {

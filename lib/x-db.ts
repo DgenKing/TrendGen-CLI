@@ -24,9 +24,13 @@ function initDb(): void {
       text TEXT,
       image_path TEXT,
       posted_at TEXT,
-      status TEXT
+      status TEXT,
+      platform TEXT DEFAULT 'twitter'
     )
   `);
+
+  // Add platform column to existing posts table (safe for existing DBs)
+  try { db.exec(`ALTER TABLE posts ADD COLUMN platform TEXT DEFAULT 'twitter'`); } catch {};
 
   // comments table
   db.exec(`
@@ -47,9 +51,13 @@ function initDb(): void {
     CREATE TABLE IF NOT EXISTS daily_counts (
       date TEXT PRIMARY KEY,
       posts_count INTEGER DEFAULT 0,
-      comments_count INTEGER DEFAULT 0
+      comments_count INTEGER DEFAULT 0,
+      fb_posts_count INTEGER DEFAULT 0
     )
   `);
+
+  // Add fb_posts_count column to existing daily_counts table (safe for existing DBs)
+  try { db.exec(`ALTER TABLE daily_counts ADD COLUMN fb_posts_count INTEGER DEFAULT 0`); } catch {};
 
   // Track replied tweets to avoid duplicate replies
   db.exec(`
@@ -99,20 +107,38 @@ export function incrementCommentCount(): void {
   `).run(today);
 }
 
+export function getTodayFbPostCount(): number {
+  const db = getDb();
+  const today = getToday();
+  const row = db.prepare("SELECT fb_posts_count FROM daily_counts WHERE date = ?").get(today) as { fb_posts_count: number } | undefined;
+  return row?.fb_posts_count ?? 0;
+}
+
+export function incrementFbPostCount(): void {
+  const db = getDb();
+  const today = getToday();
+  db.prepare(`
+    INSERT INTO daily_counts (date, posts_count, comments_count, fb_posts_count)
+    VALUES (?, 0, 0, 1)
+    ON CONFLICT(date) DO UPDATE SET fb_posts_count = fb_posts_count + 1
+  `).run(today);
+}
+
 export interface PostRecord {
   tweet_id: string;
   text: string;
   image_path: string | null;
   posted_at: string;
   status: string;
+  platform?: string;
 }
 
 export function logPost(post: PostRecord): void {
   const db = getDb();
   db.prepare(`
-    INSERT INTO posts (tweet_id, text, image_path, posted_at, status)
-    VALUES (?, ?, ?, ?, ?)
-  `).run(post.tweet_id, post.text, post.image_path, post.posted_at, post.status);
+    INSERT INTO posts (tweet_id, text, image_path, posted_at, status, platform)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(post.tweet_id, post.text, post.image_path, post.posted_at, post.status, post.platform || "twitter");
 }
 
 export interface CommentRecord {

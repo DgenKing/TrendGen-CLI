@@ -91,13 +91,18 @@ export async function saveCurrentPost(
   platform: string,
   postText: string,
   idea: string,
+  forceImage: boolean = false,
 ): Promise<CurrentPost> {
   await mkdir(CURRENT_POST_DIR, { recursive: true });
 
   const roll = Math.random();
-  const generateImage = config.image.enabled && roll < config.image.imageChance;
+  const generateImage = forceImage || (config.image.enabled && roll < config.image.imageChance);
 
-  console.error(`[IMAGE] Roll: ${roll.toFixed(2)} → ${generateImage ? "GENERATING IMAGE" : "NO IMAGE THIS RUN"}`);
+  if (forceImage) {
+    console.error(`[IMAGE] --image flag → GENERATING IMAGE`);
+  } else {
+    console.error(`[IMAGE] Roll: ${roll.toFixed(2)} → ${generateImage ? "GENERATING IMAGE" : "NO IMAGE THIS RUN"}`);
+  }
 
   let imagePath: string | null = null;
 

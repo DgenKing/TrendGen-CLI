@@ -210,6 +210,28 @@ export const config = {
     fallbackReply: "Happy to chat if you need a hand — what's your biggest headache right now?",
   },
 
+  // === FACEBOOK AUTO-POSTING ===
+  // Posts to a Facebook Page via Meta Graph API (free).
+  //
+  // Setup:
+  //   1. Create a Facebook Page for your business (if not already)
+  //   2. Go to https://developers.facebook.com → Create App → Business type
+  //   3. Add "Facebook Login for Business" product
+  //   4. Go to Graph API Explorer: https://developers.facebook.com/tools/explorer/
+  //   5. Select your app → Get User Token → check pages_manage_posts, pages_read_engagement
+  //   6. Click "Get Access Token" → authorize
+  //   7. Exchange for a long-lived Page Access Token:
+  //      GET /me/accounts?access_token=USER_TOKEN → find your page → copy access_token
+  //   8. That page access token never expires — paste below
+  //
+  facebook: {
+    enabled: false,                          // flip to true once set up
+    pageId: "",                              // Facebook Page ID (numeric)
+    pageAccessToken: "",                     // Long-lived Page Access Token
+    postsPerDay: 3,                          // hard cap
+    dryRun: false,                           // true = log but don't post
+  },
+
   twitterApiIo: {
     enabled: false,                        // set to true to enable tweet search + commenting
     apiKey: "",                            // twitterapi.io key ($5/mo)
