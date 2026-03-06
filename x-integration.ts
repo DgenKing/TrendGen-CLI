@@ -10,10 +10,15 @@ import { runCommentFlow } from "./lib/x-commenter";
 import fs from "fs";
 import path from "path";
 
+type Strategy = "value_first" | "authority_building" | "direct_sales";
+
+const STRATEGIES: Strategy[] = ["value_first", "authority_building", "direct_sales"];
+
 interface CliFlags {
   "post-only": boolean;
   "comment-only": boolean;
   "dry-run": boolean;
+  strategy: Strategy | null;
 }
 
 function parseFlags(args: string[]): CliFlags {
@@ -21,15 +26,24 @@ function parseFlags(args: string[]): CliFlags {
     "post-only": false,
     "comment-only": false,
     "dry-run": false,
+    strategy: null,
   };
 
-  for (const arg of args) {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
     if (arg === "--post-only") flags["post-only"] = true;
     if (arg === "--comment-only") flags["comment-only"] = true;
     if (arg === "--dry-run") flags["dry-run"] = true;
+    if (arg === "--strategy" && args[i + 1]) {
+      flags.strategy = args[++i] as Strategy;
+    }
   }
 
   return flags;
+}
+
+function pickRandomStrategy(): Strategy {
+  return STRATEGIES[Math.floor(Math.random() * STRATEGIES.length)];
 }
 
 async function readCurrentPost(): Promise<{ text: string; imagePath: string | null } | null> {
@@ -52,7 +66,7 @@ async function readCurrentPost(): Promise<{ text: string; imagePath: string | nu
   }
 }
 
-async function runPostFlow(): Promise<{ success: boolean; error?: string }> {
+async function runPostFlow(strategy: Strategy): Promise<{ success: boolean; error?: string }> {
   console.log("\n=== POST FLOW ===\n");
 
   // Check if X integration is enabled
@@ -77,9 +91,10 @@ async function runPostFlow(): Promise<{ success: boolean; error?: string }> {
   console.log(`Posts today: ${currentPostCount}/${config.x.postsPerDay}`);
 
   // Generate content using existing pipeline
-  console.log("Generating content...");
+  console.log(`Generating content (strategy: ${strategy})...`);
   const pipelineResult: PipelineResult = await runPipeline({
     platforms: ["twitter"],
+    strategy,
     quiet: false,
   });
 
@@ -115,7 +130,9 @@ async function main() {
   console.log("=".repeat(50));
   console.log("X.com Auto-Posting + Commenting Integration");
   console.log("=".repeat(50));
+  const strategy = flags.strategy || pickRandomStrategy();
   console.log(`Mode: ${flags["post-only"] ? "POST-ONLY" : flags["comment-only"] ? "COMMENT-ONLY" : "FULL"}`);
+  console.log(`Strategy: ${strategy}${!flags.strategy ? " (random)" : ""}`);
   console.log(`Dry run: ${flags["dry-run"] ? "YES" : "NO"}`);
 
   // If dry-run flag passed, apply to config
@@ -144,7 +161,7 @@ async function main() {
 
   // Run post flow (unless comment-only)
   if (!flags["comment-only"]) {
-    const postResult = await runPostFlow();
+    const postResult = await runPostFlow(strategy);
     postSuccess = postResult.success;
     postError = postResult.error;
   }

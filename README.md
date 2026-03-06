@@ -92,10 +92,13 @@ bun run x -- --post-only
 # Comment only (Skip posting)
 bun run x -- --comment-only
 
+# Force a specific strategy (default: random)
+bun run x -- --strategy value_first
+bun run x -- --strategy authority_building
+bun run x -- --strategy direct_sales
+
 # Posts today: 2/5 (Resets midnight)
-bun run x -- --status 
-
-
+bun run x -- --status
 ```
 
 ### Content Generation Only

@@ -66,7 +66,6 @@ export async function runPipeline(
 
   if (config.sources.googleTrends) sourcesUsed.push("google");
   if (config.sources.xcom) sourcesUsed.push("xcom");
-  if (config.sources.coingecko) sourcesUsed.push("coingecko");
   if (config.sources.reddit.enabled) sourcesUsed.push("reddit");
   if (config.sources.news.enabled) sourcesUsed.push("news");
 
@@ -203,7 +202,7 @@ export async function runPipeline(
         industry: businessData.industry,
       },
       keywords: [],
-      trends: { google: [], xcom: [], coingecko: [], reddit: [], news: [] },
+      trends: { google: [], xcom: [], reddit: [], news: [] },
       postIdeas: [],
       content: [],
       currentPost: null,

@@ -1,7 +1,6 @@
 import { makeRequest } from "./claude";
 import { googleTrendsService } from "./sources/google";
 import { xcomScraperService } from "./sources/xcom";
-import { coinGeckoService } from "./sources/coingecko";
 import { redditAnalysisService } from "./sources/reddit";
 import { newsAnalysisService } from "./sources/news";
 import { config } from "../config";
@@ -9,7 +8,6 @@ import { config } from "../config";
 export interface TrendData {
   google: string[];
   xcom: string[];
-  coingecko: any[];
   reddit: any[];
   news: any[];
 }
@@ -25,15 +23,12 @@ export async function analyzeTrends(
   logger?: any
 ): Promise<TrendData> {
   // Run all trend analysis in parallel for better performance
-  const [googleSuggestions, xcomTrends, coingeckoTrends, redditDiscussions, newsArticles] = await Promise.allSettled([
+  const [googleSuggestions, xcomTrends, redditDiscussions, newsArticles] = await Promise.allSettled([
     config.sources.googleTrends
       ? googleTrendsService.getAutocompleteSuggestions(keywords, businessData.ukCity)
       : Promise.resolve([]),
     config.sources.xcom
       ? xcomScraperService.getUKTrends()
-      : Promise.resolve([]),
-    config.sources.coingecko
-      ? coinGeckoService.getTrendingCoins()
       : Promise.resolve([]),
     redditAnalysisService.getRelevantDiscussions(keywords, businessData.ukCity),
     newsAnalysisService.getRelevantArticles(keywords, businessData.businessType, businessData.ukCity)
@@ -43,7 +38,6 @@ export async function analyzeTrends(
   const trendsData: TrendData = {
     google: googleSuggestions.status === 'fulfilled' ? googleSuggestions.value : [],
     xcom: xcomTrends.status === 'fulfilled' ? xcomTrends.value : [],
-    coingecko: coingeckoTrends.status === 'fulfilled' ? coingeckoTrends.value : [],
     reddit: redditDiscussions.status === 'fulfilled' ? redditDiscussions.value : [],
     news: newsArticles.status === 'fulfilled' ? newsArticles.value : []
   };
@@ -52,7 +46,6 @@ export async function analyzeTrends(
   if (logger) {
     logger.logGoogleSearch(keywords, trendsData.google);
     logger.logXcomTrends(trendsData.xcom);
-    logger.logCoingeckoTrends(trendsData.coingecko);
     logger.logRedditSearch(keywords, trendsData.reddit);
     logger.logCryptoNews(trendsData.news);
   }
@@ -124,6 +117,12 @@ QUALITY GUIDELINES:
 - Each idea must feel like something the target audience cares about RIGHT NOW
 - Be specific and opinionated — generic "here's what you need to know" is not enough
 - Ideas must tie back to what ${businessData.businessName} does and who they serve
+
+VARIETY RULE (CRITICAL):
+- MAX 2 ideas can use the "[Big company/product] does X, mine does Y" comparison format
+- At least 2 ideas must be audience pain points, tips, or lessons learned (no comparison to other products)
+- At least 1 idea should use local/community trends or social trends
+- Mix these angles: personal story, customer win, industry hot take, practical tip, myth-busting, behind-the-scenes
 
 Generate 6-8 post concepts that:
 1. React directly to a specific trend or news item relevant to the audience
@@ -256,10 +255,6 @@ function formatTrendsWithContext(trendsData: TrendData): string {
 
   if (trendsData.xcom.length > 0) {
     formatted += `Social Trends:\n${trendsData.xcom.join(', ')}\n\n`;
-  }
-
-  if (trendsData.coingecko.length > 0) {
-    formatted += `Trending Coins:\n${trendsData.coingecko.map((c: any) => `${c.name} (${c.symbol}) - Rank #${c.rank}`).join(', ')}\n\n`;
   }
 
   return formatted || "No trends available";

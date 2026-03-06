@@ -50,7 +50,6 @@ export const config = {
   sources: {
     googleTrends: true,
     xcom: true,
-    coingecko: true,                       // Trending coins — set false if not crypto
     reddit: {
       enabled: false,
       clientId: "",
